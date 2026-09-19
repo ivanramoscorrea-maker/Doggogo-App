@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/common/Button';
 
 export const DashboardScreen = () => {
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const [activeTask, setActiveTask] = useState(false);
   const [iotStatus, setIotStatus] = useState({ battery: 85, signal: 'Fuerte' });
 
@@ -14,7 +14,7 @@ export const DashboardScreen = () => {
         <View className="flex-row justify-between items-center mb-8">
           <View>
             <Text className="text-2xl font-bold text-gray-800">Panel de Control</Text>
-            <Text className="text-gray-500">Hola, Paseador</Text>
+            <Text className="text-gray-500">Hola, {user?.displayName || 'Paseador'}</Text>
           </View>
           <TouchableOpacity onPress={signOut} className="bg-gray-200 px-3 py-2 rounded-lg">
             <Text className="text-gray-700 font-semibold">Salir</Text>

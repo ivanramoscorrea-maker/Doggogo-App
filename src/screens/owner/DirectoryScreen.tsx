@@ -1,12 +1,21 @@
-import React from 'react';
-import { View, Text, FlatList, Image, SafeAreaView, TouchableOpacity, Linking, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, Image, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { db } from '../../config/firebase';
+import { collection, query, getDocs, limit, orderBy } from 'firebase/firestore';
 
-const WALKERS = [
-  { id: '1', name: 'Carlos R.', rating: 4.9, walks: 120, price: 15, avatar: 'https://i.pravatar.cc/150?u=carlos' },
-  { id: '2', name: 'Ana M.', rating: 5.0, walks: 85, price: 18, avatar: 'https://i.pravatar.cc/150?u=ana' },
-  { id: '3', name: 'Jorge T.', rating: 4.7, walks: 42, price: 12, avatar: 'https://i.pravatar.cc/150?u=jorge' },
-];
+interface WalkerData {
+  uid: string;
+  name: string;
+  photoURL?: string;
+  rate?: number;
+  city?: string;
+  neighborhood?: string;
+  bio?: string;
+  // Estos datos se calcularán de las reseñas más adelante en producción
+  rating?: number;
+  walks?: number;
+}
 
 const LOCAL_ADS = [
   {
@@ -29,6 +38,31 @@ const LOCAL_ADS = [
 
 export const DirectoryScreen = () => {
   const { signOut } = useAuth();
+  const [walkers, setWalkers] = useState<WalkerData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWalkers = async () => {
+      try {
+        const walkersRef = collection(db, 'walkers');
+        const q = query(walkersRef, limit(20)); // Limitamos por rendimiento
+        const querySnapshot = await getDocs(q);
+        
+        const walkersList: WalkerData[] = [];
+        querySnapshot.forEach((doc) => {
+          walkersList.push({ uid: doc.id, ...doc.data() } as WalkerData);
+        });
+        
+        setWalkers(walkersList);
+      } catch (error) {
+        console.error("Error obteniendo paseadores: ", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchWalkers();
+  }, []);
 
   const renderAdBanner = () => (
     <View className="mb-6">
@@ -45,40 +79,56 @@ export const DirectoryScreen = () => {
           </TouchableOpacity>
         ))}
       </ScrollView>
+      <Text className="text-2xl font-bold text-gray-800 mt-6 mb-2">Paseadores Cerca</Text>
     </View>
   );
 
-  const renderWalker = ({ item }: { item: typeof WALKERS[0] }) => (
-    <View className="flex-row items-center bg-surface p-4 rounded-2xl mb-4 border border-gray-100 shadow-sm" style={{ elevation: 2 }}>
-      <Image source={{ uri: item.avatar }} className="w-16 h-16 rounded-full bg-gray-200" />
+  const renderWalker = ({ item }: { item: WalkerData }) => (
+    <TouchableOpacity className="flex-row items-center bg-surface p-4 rounded-2xl mb-4 border border-gray-100 shadow-sm" style={{ elevation: 2 }}>
+      <Image 
+        source={{ uri: item.photoURL || 'https://i.pravatar.cc/150?u=' + item.uid }} 
+        className="w-16 h-16 rounded-full bg-gray-200" 
+      />
       <View className="flex-1 ml-4">
-        <Text className="text-lg font-bold text-gray-800">{item.name}</Text>
-        <Text className="text-gray-500 text-sm">⭐ {item.rating} ({item.walks} paseos)</Text>
+        <Text className="text-lg font-bold text-gray-800">{item.name || 'Paseador'}</Text>
+        <Text className="text-gray-500 text-xs mb-1" numberOfLines={1}>{item.neighborhood || 'Zona no definida'}{item.city ? `, ${item.city}` : ''}</Text>
+        <Text className="text-orange-500 text-sm font-semibold">
+          ⭐ {item.rating || '5.0'} ({item.walks || '0'} paseos)
+        </Text>
       </View>
       <View className="items-end">
-        <Text className="text-lg font-bold text-primary">${item.price}</Text>
+        <Text className="text-lg font-bold text-primary">${item.rate || 0}</Text>
         <Text className="text-gray-400 text-xs">/hora</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="px-6 pt-6 pb-2 flex-row justify-between items-center">
-        <Text className="text-2xl font-bold text-gray-800">Paseadores Cerca</Text>
+        <Text className="text-3xl font-bold text-primary">DoggoGo</Text>
         <TouchableOpacity onPress={signOut}>
           <Text className="text-gray-400 text-sm font-semibold">Salir</Text>
         </TouchableOpacity>
       </View>
       
-      <FlatList
-        data={WALKERS}
-        keyExtractor={(item) => item.id}
-        renderItem={renderWalker}
-        contentContainerStyle={{ padding: 24 }}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={renderAdBanner}
-      />
+      {isLoading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#F97316" />
+        </View>
+      ) : (
+        <FlatList
+          data={walkers}
+          keyExtractor={(item) => item.uid}
+          renderItem={renderWalker}
+          contentContainerStyle={{ padding: 24 }}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={renderAdBanner}
+          ListEmptyComponent={
+            <Text className="text-center text-gray-500 mt-10">Aún no hay paseadores registrados en tu zona.</Text>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 };
