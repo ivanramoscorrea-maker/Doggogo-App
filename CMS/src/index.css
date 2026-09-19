@@ -1,9 +1,13 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  body {
-    @apply bg-background text-slate-800;
-  }
+@theme {
+  --color-primary: #F97316;
+  --color-secondary: #0EA5E9;
+  --color-background: #F8FAFC;
+  --color-surface: #FFFFFF;
+}
+
+body {
+  background-color: var(--color-background);
+  color: #1e293b; /* slate-800 equivalent */
 }
