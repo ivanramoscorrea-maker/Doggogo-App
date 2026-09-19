@@ -1,24 +1,34 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { getDatabase } from 'firebase/database';
+import { getStorage } from 'firebase/storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Esta es una configuración simulada.
-// Para que la app funcione correctamente, deberás reemplazar estos valores
-// con tus credenciales reales de Firebase Console.
+// ⚠️ IMPORTANTE: REEMPLAZA ESTOS VALORES CON TUS CREDENCIALES REALES
+// Puedes encontrar esto en tu Consola de Firebase -> Configuración del Proyecto -> General -> Tus apps
 const firebaseConfig = {
-  apiKey: "SIMULATED_API_KEY",
-  authDomain: "doggogo-app.firebaseapp.com",
-  databaseURL: "https://doggogo-app.firebaseio.com",
-  projectId: "doggogo-app",
-  storageBucket: "doggogo-app.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef"
+  apiKey: "REEMPLAZAR_CON_TU_API_KEY",
+  authDomain: "tu-proyecto.firebaseapp.com",
+  projectId: "tu-proyecto",
+  storageBucket: "tu-proyecto.appspot.com",
+  messagingSenderId: "REEMPLAZAR_SENDER_ID",
+  appId: "REEMPLAZAR_APP_ID"
 };
 
-// Inicializar Firebase (En un entorno real sin credenciales válidas, esto lanzará advertencias/errores)
-// Para el desarrollo de la UI, usaremos mocks en el Contexto.
-export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const rtdb = getDatabase(app);
+// Inicialización segura (evita reinicializaciones en desarrollo)
+let app;
+if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp();
+}
+
+// Inicializa Auth con persistencia en React Native para no perder la sesión
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage)
+});
+
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+export { app, auth, db, storage };

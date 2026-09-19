@@ -1,0 +1,41 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Función auxiliar para verificar si el usuario está logueado
+    function isAuth() {
+      return request.auth != null;
+    }
+    
+    // Función auxiliar para verificar si el usuario está intentando modificar su propio documento
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+
+    // COLECCIÓN 'users': Datos privados del usuario (teléfono, email, rol)
+    match /users/{userId} {
+      // Un usuario solo puede leer su propio perfil privado
+      allow read: if isOwner(userId);
+      
+      // Un usuario solo puede crear/modificar su propio perfil
+      // Validamos que el UID coincida con el documento para evitar suplantación
+      allow create, update: if isOwner(userId) && request.resource.data.uid == userId;
+      
+      // Nadie debería poder borrar usuarios desde la app (solo desde admin console)
+      allow delete: if false;
+    }
+
+    // COLECCIÓN 'walkers': Perfiles públicos profesionales de los paseadores
+    match /walkers/{walkerId} {
+      // Cualquier usuario registrado en la app (Dueño o Paseador) puede leer el directorio de paseadores
+      allow read: if isAuth();
+      
+      // Solo el paseador dueño del perfil puede crear o modificar su información pública
+      allow create, update: if isOwner(walkerId);
+      
+      // Nadie puede borrar perfiles desde la app
+      allow delete: if false;
+    }
+  }
+}

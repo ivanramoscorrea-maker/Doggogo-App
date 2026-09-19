@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, SafeAreaView, KeyboardAvoidingView, Platform, Alert, TouchableOpacity } from 'react-native';
-import { useAuth, Role } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/common/Button';
 import { auth } from '../../config/firebase';
 import { signInWithPhoneNumber, GoogleAuthProvider, signInWithPopup, OAuthProvider, signInWithCredential } from 'firebase/auth';
 import * as AppleAuthentication from 'expo-apple-authentication';
-// Nota: Google SignIn en RN nativo suele usar @react-native-google-signin/google-signin
-// Para este entorno, implementamos la estructura lógica de los proveedores.
 
 export const LoginScreen = () => {
-  const { user, setRoleForNewUser, isLoading } = useAuth();
+  const { user, setRoleForNewUser } = useAuth();
   
   // Estados para OTP
   const [phoneNumber, setPhoneNumber] = useState('');
