@@ -5,11 +5,39 @@ import { LoginScreen } from '../screens/auth/LoginScreen';
 import { OwnerTabs } from './OwnerTabs';
 import { WalkerTabs } from './WalkerTabs';
 
+import * as Linking from 'expo-linking';
+
+const prefix = Linking.createURL('/');
+
+const linking = {
+  prefixes: [prefix, 'https://app.doggogo.site', 'doggogo://'],
+  config: {
+    screens: {
+      Login: 'login',
+      Owner: {
+        path: 'owner',
+        screens: {
+          Directorio: 'directory',
+          Paseo: 'tracking',
+        }
+      },
+      Walker: {
+        path: 'walker',
+        screens: {
+          Dashboard: 'dashboard',
+          Cursos: 'courses',
+          Perfil: 'profile',
+        }
+      }
+    },
+  },
+};
+
 export const AppNavigator = () => {
   const { user } = useAuth();
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       {!user ? (
         <LoginScreen />
       ) : user.role === 'owner' ? (

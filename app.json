@@ -2,6 +2,7 @@
   "expo": {
     "name": "DoggoGo",
     "slug": "DoggoGo",
+    "scheme": "doggogo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,7 +21,8 @@
       "package": "com.anonymous.DoggoGo"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
     }
   }
 }
